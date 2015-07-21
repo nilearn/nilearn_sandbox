@@ -10,6 +10,5 @@ This repository is meant to be a playground but we still need to impose rules to
 * Integration of code is made through pull request system.
 * Import of external python packages should be done locally in your functions so that people who wants to use a particular feature are not blocked by an unwanted dependency.
 * This repository requires less quality in the code but please try to document and test it.
-* 
 
 ### *Happy hacking!*
