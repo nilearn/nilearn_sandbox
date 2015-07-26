@@ -1,4 +1,5 @@
 import base64
+import tempfile
 import nibabel
 import numpy as np
 import os
@@ -12,15 +13,20 @@ def _get_64(niimg):
     data = data / data.max() * 254.
     data = data.astype(np.uint8)
     f = nibabel.Nifti1Image(data, f.get_affine())
-    f.to_filename('_maps.nii.gz')
-    with open('_maps.nii.gz', 'br') as f:
+    _, filename = tempfile.mkstemp(suffix='.nii.gz')
+    f.to_filename(filename)
+    with open(filename, 'br') as f:
         b64 = base64.b64encode(f.read())
-    os.unlink('_maps.nii.gz')
+    os.unlink(filename)
     return b64.decode('utf-8')
 
 
-def papaya_viewer(html_path, maps_niimg):
+def papaya_viewer(maps_niimg, output_file=None):
     import tempita
+
+    open_in_browser = (output_file is None)
+    if open_in_browser:
+        _, output_file = tempfile.mkstemp(suffix='.html')
 
     body = ""
     package_directory = os.path.dirname(os.path.abspath(__file__))
@@ -41,5 +47,10 @@ def papaya_viewer(html_path, maps_niimg):
     with open(os.path.join(data, 'papaya.css'), 'r') as f:
         css = f.read()
     text = tmpl.substitute(locals())
-    with open(html_path, 'w') as m:
+    with open(output_file, 'w') as m:
         m.write(text)
+    if open_in_browser:
+        from urllib import request
+        import webbrowser
+
+        webbrowser.open(request.pathname2url(output_file))
