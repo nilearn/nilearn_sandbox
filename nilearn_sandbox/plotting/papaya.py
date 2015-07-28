@@ -15,7 +15,7 @@ def _get_64(niimg):
     f = nibabel.Nifti1Image(data, f.get_affine())
     _, filename = tempfile.mkstemp(suffix='.nii.gz')
     f.to_filename(filename)
-    with open(filename, 'br') as f:
+    with open(filename, 'rb') as f:
         b64 = base64.b64encode(f.read())
     os.unlink(filename)
     return b64.decode('utf-8')
@@ -34,30 +34,30 @@ def papaya_viewer(maps_niimg, output_file=None):
     package_directory = os.path.dirname(os.path.abspath(__file__))
     data = os.path.join(package_directory, "data", "papaya")
 
-    with open(os.path.join(data, 'template.html'), 'r') as f:
-        template = f.read()
-    # tempita
-    # tmpl = tempita.Template(template)
-    javascript = ''
+    with open(os.path.join(data, 'template.html'), 'rb') as f:
+        template = f.read().decode('utf-8')
+    javascript = u''
     javascript += 'var maps = "'
     javascript += _get_64(maps_niimg)
     javascript += '";\n'
     javascript += 'var template = "'
     javascript += _get_64(os.path.join(data, 'template.nii.gz'))
     javascript += '";\n'
-    with open(os.path.join(data, 'papaya.js'), 'r') as f:
-        javascript += f.read()
-    with open(os.path.join(data, 'papaya.css'), 'r') as f:
-        css = f.read()
-    # tempita
-    # text = tmpl.substitute(locals())
+
+    with open(os.path.join(data, 'papaya.js'), 'rb') as f:
+        javascript += f.read().decode('utf-8')
+    with open(os.path.join(data, 'papaya.css'), 'rb') as f:
+        css = f.read().decode('utf-8')
+
     text = template.replace('{{css}}', css)
     text = text.replace('{{javascript}}', javascript)
     text = text.replace('{{body}}', body)
-    with open(output_file, 'w') as m:
-        m.write(text)
+
+    with open(output_file, 'wb') as m:
+        m.write(text.encode('utf-8'))
+
     if open_in_browser:
-        from urllib import request
+        from nilearn._utils.compat import _urllib
         import webbrowser
 
-        webbrowser.open(request.pathname2url(output_file))
+        webbrowser.open(_urllib.request.pathname2url(output_file))
