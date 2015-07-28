@@ -22,7 +22,9 @@ def _get_64(niimg):
 
 
 def papaya_viewer(maps_niimg, output_file=None):
-    import tempita
+    # The template is tempita compliant but I don't include it just for a
+    # simple replace. If it becomes a dependency, use it here.
+    # import tempita
 
     open_in_browser = (output_file is None)
     if open_in_browser:
@@ -34,7 +36,8 @@ def papaya_viewer(maps_niimg, output_file=None):
 
     with open(os.path.join(data, 'template.html'), 'r') as f:
         template = f.read()
-    tmpl = tempita.Template(template)
+    # tempita
+    # tmpl = tempita.Template(template)
     javascript = ''
     javascript += 'var maps = "'
     javascript += _get_64(maps_niimg)
@@ -46,7 +49,11 @@ def papaya_viewer(maps_niimg, output_file=None):
         javascript += f.read()
     with open(os.path.join(data, 'papaya.css'), 'r') as f:
         css = f.read()
-    text = tmpl.substitute(locals())
+    # tempita
+    # text = tmpl.substitute(locals())
+    text = template.replace('{{css}}', css)
+    text = text.replace('{{javascript}}', javascript)
+    text = text.replace('{{body}}', body)
     with open(output_file, 'w') as m:
         m.write(text)
     if open_in_browser:
