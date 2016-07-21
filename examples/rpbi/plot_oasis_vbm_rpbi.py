@@ -88,7 +88,7 @@ title = ('Negative $\log_{10}$ p-values'
 display.title(title, y=1.2)
 
 ### Randomized Parcellation Based Inference ###################################
-from nilearn.mass_univariate import randomized_parcellation_based_inference
+from nilearn_sandbox.mass_univariate.rpbi import randomized_parcellation_based_inference
 
 print "Randomized Parcellation Based Inference"
 neg_log_pvals_rpbi, _, _ = randomized_parcellation_based_inference(

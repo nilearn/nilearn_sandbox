@@ -12,7 +12,7 @@ from sklearn.utils import gen_even_slices, check_random_state
 from sklearn.preprocessing import binarize
 from sklearn.feature_extraction import image
 
-from nilearn._utils import check_n_jobs
+from .._utils.common_checks import check_n_jobs
 from nilearn._utils.cache_mixin import cache
 from .utils import (
     orthogonalize_design, t_score_with_covars_and_normalized_design)

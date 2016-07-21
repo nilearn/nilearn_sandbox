@@ -16,7 +16,7 @@ from nilearn import datasets
 from scipy import linalg
 from nilearn.input_data import NiftiMasker
 from nilearn.mass_univariate import permuted_ols
-from nilearn.mass_univariate import randomized_parcellation_based_inference
+from nilearn_sandbox.mass_univariate.rpbi import randomized_parcellation_based_inference
 
 ### Load Localizer motor contrast #############################################
 n_samples = 20

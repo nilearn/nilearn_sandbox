@@ -7,7 +7,7 @@ import numpy as np
 from numpy.testing import (assert_equal, assert_array_equal,
                            assert_array_almost_equal, assert_raises)
 from sklearn.utils import check_random_state
-from nilearn.mass_univariate.rpbi import (
+from nilearn_sandbox.mass_univariate.rpbi import (
     GrowableSparseArray, _ward_fit_transform, _build_parcellations,
     _compute_counting_statistic_from_parcel_level_scores, rpbi_core,
     randomized_parcellation_based_inference)
