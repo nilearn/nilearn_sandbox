@@ -11,6 +11,7 @@ from sklearn.externals.joblib import Memory
 from sklearn.utils import gen_even_slices, check_random_state
 from sklearn.preprocessing import binarize
 from sklearn.feature_extraction import image
+from sklearn.cluster import FeatureAgglomeration
 
 from .._utils.common_checks import check_n_jobs
 from nilearn._utils.cache_mixin import cache
@@ -207,18 +208,6 @@ def _ward_fit_transform(all_subjects_data, fit_samples_indices,
       Labels giving the correspondance between voxels and parcels.
 
     """
-    # XXX: Delayed import is a mega hack which is unfortunately
-    # required. In scipy versions < 0.11, this import ends up
-    # importing matplotlib.pyplot. This sets the matplotlib backend
-    # which causes our matplotlib backend setting code in
-    # nilearn/plotting/__init__.py to have no effect. In environment
-    # without X, e.g. travis-ci, that means the tests will fail with
-    # the usual "TclError: no display name and no $DISPLAY environment
-    # variable". Note this is dependent on the order of import,
-    # whichever comes first has the only shot at setting the
-    # matplotlib backend.
-    from sklearn.cluster import FeatureAgglomeration
-
     # fit part
     data_fit = all_subjects_data[fit_samples_indices]
     ward = FeatureAgglomeration(n_clusters=n_parcels,
@@ -318,7 +307,7 @@ def _build_parcellations(all_subjects_data, mask, n_parcellations=100,
     parcelled_data = np.hstack((parcelled_data_parts))
     ward_labels = np.ravel(ward_labels)
 
-    return parcelled_data, np.ravel(ward_labels)
+    return parcelled_data, ward_labels
 
 
 ### Routines for RPBI #########################################################
