@@ -12,6 +12,39 @@ jupyter:
     name: python3
 ---
 
+# Notes from 2022-10-14 
+
+Drop `MultiMeshFamily`: each `SurfaceImage` has exactly 1 mesh (typically the pial surface for one of the fsaverage resolutions).
+When we want to plot a map on a different mesh, construct a new image.
+
+Therefore `SurfaceImage` looks like:
+
+~~~python
+
+class SurfaceImage:
+    data: PolyData
+    meshes: PolyMesh
+    shape: Tuple[int, ...]
+~~~
+
+<!-- #md -->
+```
+<SurfaceImage (895, 20484)>:
+  data:
+    left_hemisphere: <ndarray (895, 10242)>
+    right_hemisphere: <ndarray (895, 10242)>
+  mesh:
+    left_hemisphere: <Mesh with 10242 nodes>
+    right_hemisphere: <Mesh with 10242 nodes>
+  shape: (895, 20484)
+```
+<!-- #endmd -->
+
+When calling `vol_to_surf` with 2 surfaces (for sampling between pial and wm surface), the outer (pial) surface is kept unless the user explicitly says otherwise.
+
+
+
+
 # Surface images in Nilearn
 
 Current state:
