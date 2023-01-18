@@ -55,7 +55,7 @@ def _get_mesh_dims(mesh: PolyMesh) -> Dict[str, int]:
 @dataclasses.dataclass()
 class SurfaceImage:
     data: PolyData
-    meshes: PolyMeshFamily
+    mesh: PolyMesh
     shape: Tuple[int, ...] = dataclasses.field(init=False)
 
     def __post_init__(self) -> None:
@@ -72,9 +72,7 @@ class SurfaceImage:
     def _check_shapes(
         self, data_shapes: Mapping[str, Tuple[int, ...]]
     ) -> None:
-        mesh_dims = _get_mesh_dims(list(self.meshes.values())[0])
-        for mesh in self.meshes.values():
-            assert _get_mesh_dims(mesh) == mesh_dims
+        mesh_dims = _get_mesh_dims(self.mesh)
         assert {k: v[-1] for (k, v) in data_shapes.items()} == mesh_dims
 
     def __repr__(self) -> str:
@@ -93,7 +91,7 @@ class SurfaceMasker:
             k: np.ones(_load(v).shape[-1], dtype=bool)
             for (k, v) in img.data.items()
         }
-        self.mask_img_ = SurfaceImage(data=mask_data, meshes=img.meshes)  # type: ignore
+        self.mask_img_ = SurfaceImage(data=mask_data, mesh=img.mesh)  # type: ignore
 
     def fit(self, img: SurfaceImage, y: Any = None) -> SurfaceMasker:
         del y
@@ -139,7 +137,7 @@ class SurfaceMasker:
             data[part_name][:, mask] = masked_images[:, start:stop]
             if not is_2d:
                 data[part_name] = data[part_name].squeeze()
-        return SurfaceImage(data=data, meshes=self.mask_img_.meshes)  # type: ignore
+        return SurfaceImage(data=data, mesh=self.mask_img_.mesh)  # type: ignore
 
 
 class SurfaceLabelsMasker:
@@ -207,7 +205,7 @@ class SurfaceLabelsMasker:
                 ]
             if not is_2d:
                 data[part_name] = data[part_name].squeeze()
-        return SurfaceImage(data=data, meshes=self.labels_img.meshes)  # type: ignore
+        return SurfaceImage(data=data, mesh=self.labels_img.mesh)  # type: ignore
 
 
 def load_fsaverage(mesh_name: str = "fsaverage5") -> PolyMeshFamily:
@@ -234,7 +232,7 @@ def fetch_nki(n_subjects=1) -> Sequence[SurfaceImage]:
         right_data = nilearn.surface.load_surf_data(right).T
         img = SurfaceImage(
             {"left_hemisphere": left_data, "right_hemisphere": right_data},
-            meshes=fsaverage,
+            mesh=fsaverage["pial"],
         )
         images.append(img)
     return images
@@ -252,7 +250,7 @@ def fetch_destrieux() -> Tuple[SurfaceImage, Dict[int, str]]:
                 "left_hemisphere": destrieux["map_left"],
                 "right_hemisphere": destrieux["map_right"],
             },
-            meshes=fsaverage,
+            mesh=fsaverage["pial"],
         ),
         label_names,
     )
@@ -261,11 +259,13 @@ def fetch_destrieux() -> Tuple[SurfaceImage, Dict[int, str]]:
 def plot_surf_img(
     img: SurfaceImage,
     parts: Optional[Sequence[str]] = None,
-    mesh: Optional[str] = None,
+    mesh: Optional[PolyMesh] = None,
     **kwargs,
 ) -> plt.Figure:
     if mesh is None:
-        mesh = list(img.meshes.keys())[0]
+        mesh = img.mesh
+    else:
+        assert _get_mesh_dims(mesh) == _get_mesh_dims(img.mesh)
     if parts is None:
         parts = list(img.data.keys())
     fig, axes = plt.subplots(
@@ -276,7 +276,7 @@ def plot_surf_img(
     )
     for ax, mesh_part in zip(axes, parts):
         plotting.plot_surf(
-            img.meshes[mesh][mesh_part],
+            mesh[mesh_part],
             img.data[mesh_part],
             axes=ax,
             title=mesh_part,

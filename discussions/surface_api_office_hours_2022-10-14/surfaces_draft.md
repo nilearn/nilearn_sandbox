@@ -14,6 +14,8 @@ jupyter:
 
 # Notes from 2022-10-14 
 
+## Done
+
 Drop `MultiMeshFamily`: each `SurfaceImage` has exactly 1 mesh (typically the pial surface for one of the fsaverage resolutions).
 When we want to plot a map on a different mesh, construct a new image.
 
@@ -219,16 +221,9 @@ This is the representation for the NKI resting state image used in the examples 
   data:
     left_hemisphere: <ndarray (895, 10242)>
     right_hemisphere: <ndarray (895, 10242)>
-  meshes:
-    inflated:
-      left_hemisphere: <Mesh with 10242 nodes>
-      right_hemisphere: <Mesh with 10242 nodes>
-    pial:
-      left_hemisphere: <Mesh with 10242 nodes>
-      right_hemisphere: <Mesh with 10242 nodes>
-    white_matter:
-      left_hemisphere: <Mesh with 10242 nodes>
-      right_hemisphere: <Mesh with 10242 nodes>
+  mesh:
+    left_hemisphere: <Mesh with 10242 nodes>
+    right_hemisphere: <Mesh with 10242 nodes>
   shape: (895, 20484)
 ```
 <!-- #endmd -->
@@ -306,8 +301,8 @@ example = {
 
 These dictionaries can be replaced with user-defined types to add functionality and enforce invariants such as having the same keys (brain parts) in all the members of a `PolyMeshFamily`.
 
-Finally a `SurfaceImage` contains a `PolyData` (a (1 or 2)-dimensional array for each hemisphere) and a `PolyMeshFamily` (with at least one element).
-The keys in `data` and `meshes` must match; they will probably always be `left_hemisphere` and `right_hemisphere`.
+Finally a `SurfaceImage` contains a `PolyData` (a (1 or 2)-dimensional array for each hemisphere) and a `PolyMesh` (with at least one element).
+The keys in `data` and `mesh` must match; they will probably always be `left_hemisphere` and `right_hemisphere`.
 The shape is `(n_time_points, total_number_of_mesh_nodes)` for 2d images, or `(total_number_of_mesh_nodes,)` for 1-D images.
 We could (should?) also transpose that (ie first dimension is always number of nodes), following the signal-processing convention rather than the stats/ML convention -- as is done in Nifti.
 It depends if we prefer to be similar to Nifti images or to Maskers' output.
@@ -316,7 +311,7 @@ It depends if we prefer to be similar to Nifti images or to Maskers' output.
 
 class SurfaceImage:
     data: PolyData
-    meshes: PolyMeshFamily
+    mesh: PolyMesh
     shape: Tuple[int, ...] = dataclasses.field(init=False)
 ~~~
 
@@ -332,7 +327,7 @@ mesh = "nilearn:fsaverage5"
 
 or
 
-```python .noeval
+```python
 import enum
 
 
