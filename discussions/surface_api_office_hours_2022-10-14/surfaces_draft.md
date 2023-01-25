@@ -12,41 +12,6 @@ jupyter:
     name: python3
 ---
 
-# Notes from 2022-10-14 
-
-## Done
-
-Drop `MultiMeshFamily`: each `SurfaceImage` has exactly 1 mesh (typically the pial surface for one of the fsaverage resolutions).
-When we want to plot a map on a different mesh, construct a new image.
-
-Therefore `SurfaceImage` looks like:
-
-~~~python
-
-class SurfaceImage:
-    data: PolyData
-    meshes: PolyMesh
-    shape: Tuple[int, ...]
-~~~
-
-<!-- #md -->
-```
-<SurfaceImage (895, 20484)>:
-  data:
-    left_hemisphere: <ndarray (895, 10242)>
-    right_hemisphere: <ndarray (895, 10242)>
-  mesh:
-    left_hemisphere: <Mesh with 10242 nodes>
-    right_hemisphere: <Mesh with 10242 nodes>
-  shape: (895, 20484)
-```
-<!-- #endmd -->
-
-When calling `vol_to_surf` with 2 surfaces (for sampling between pial and wm surface), the outer (pial) surface is kept unless the user explicitly says otherwise.
-
-
-
-
 # Surface images in Nilearn
 
 Current state:
@@ -380,3 +345,44 @@ Writing:
 - we probably don't want to deal with file formats, until nibabel does it we can consider creating a directory to save an image
 - look for some standard or a widely used tool whose output we can imitate
 - to avoid storing meshes several times we could use symlinks
+
+# Notes from 2023-01-25
+
+- It is common for images to have data for only a subset of the mesh nodes; surface images should account for that by containing a (data array index) → (mesh node index) mapping
+- nibabel's upcoming CoordinateImage will be used (in place of the SurfaceImage mentioned here)
+- the CoordinateImage code will be added as a module in nilearn for now, with a warning that it is subject to change, so it can evolve with the maskers & plotting client code in nilearn.
+- eventually that CoordinateImage module will be moved back into nibabel.
+
+# Notes from 2022-10-14 
+
+## Done
+
+Drop `MultiMeshFamily`: each `SurfaceImage` has exactly 1 mesh (typically the pial surface for one of the fsaverage resolutions).
+When we want to plot a map on a different mesh, construct a new image.
+
+Therefore `SurfaceImage` looks like:
+
+~~~python
+
+class SurfaceImage:
+    data: PolyData
+    meshes: PolyMesh
+    shape: Tuple[int, ...]
+~~~
+
+<!-- #md -->
+```
+<SurfaceImage (895, 20484)>:
+  data:
+    left_hemisphere: <ndarray (895, 10242)>
+    right_hemisphere: <ndarray (895, 10242)>
+  mesh:
+    left_hemisphere: <Mesh with 10242 nodes>
+    right_hemisphere: <Mesh with 10242 nodes>
+  shape: (895, 20484)
+```
+<!-- #endmd -->
+
+When calling `vol_to_surf` with 2 surfaces (for sampling between pial and wm surface), the outer (pial) surface is kept unless the user explicitly says otherwise.
+
+
