@@ -1,7 +1,8 @@
 # %%
-import string
 import base64
-import pathlib
+import string
+
+from pathlib import Path
 
 import nibabel as nib
 import numpy as np
@@ -10,16 +11,35 @@ from nilearn import datasets, surface
 from nilearn.plotting import html_document
 
 # %%
+output_path = Path("/home/alexis/singbrain/data/tmp")
+
+# %%
 fsaverage = datasets.fetch_surf_fsaverage(mesh="fsaverage7")
+
+# %%
+# Save pial map
+pial_left = surface.load_surf_mesh(fsaverage.pial_left)
+pial_left_path = output_path / "pial_left.gii"
+
+gifti_image = nib.gifti.GiftiImage()
+gifti_image.add_gifti_data_array(
+    nib.gifti.GiftiDataArray(pial_left[0], "NIFTI_INTENT_POINTSET")
+)
+gifti_image.add_gifti_data_array(
+    nib.gifti.GiftiDataArray(pial_left[1], "NIFTI_INTENT_TRIANGLE")
+)
+nib.save(gifti_image, pial_left_path)
 
 # %%
 # Create curv sign map
 curv_sign_left = (np.sign(surface.load_surf_data(fsaverage.curv_left)) + 1) / 2
+curv_sign_left_path = output_path / "curv_sign_left.gii"
+
 gifti_image = nib.gifti.GiftiImage()
 gifti_image.add_gifti_data_array(
     nib.gifti.GiftiDataArray(curv_sign_left, "NIFTI_INTENT_NONE")
 )
-nib.save(gifti_image, "/home/alexis/singbrain/data/tmp/curv_sign_left.gii")
+nib.save(gifti_image, curv_sign_left_path)
 
 
 # %%
@@ -28,7 +48,7 @@ stat_img = motor_images.images[0]
 surface_map = surface.vol_to_surf(stat_img, fsaverage.pial_left)
 
 # %%
-surface_map_path = "/home/alexis/singbrain/data/tmp/surface_map.gii"
+surface_map_path = output_path / "surface_map.gii"
 
 img = nib.gifti.gifti.GiftiImage()
 img.add_gifti_data_array(
@@ -90,12 +110,12 @@ encoded = {}
 
 # %%
 encoded["surf_mesh"] = base64.b64encode(
-    pathlib.Path("/home/alexis/singbrain/data/tmp/pial_left.gii").read_bytes()
+    pial_left_path.read_bytes()
 ).decode("UTF-8")
 
 # %%
 encoded["surf_map"] = base64.b64encode(
-    pathlib.Path(surface_map_path).read_bytes()
+    surface_map_path.read_bytes()
 ).decode("UTF-8")
 
 # %%
@@ -103,7 +123,7 @@ encoded["threshold"] = 3
 
 # %%
 encoded["bg_map"] = base64.b64encode(
-    pathlib.Path("/home/alexis/singbrain/data/tmp/curv_sign_left.gii").read_bytes()
+    curv_sign_left_path.read_bytes()
 ).decode("UTF-8")
 
 # %%
