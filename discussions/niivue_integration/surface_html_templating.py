@@ -73,34 +73,34 @@ template = string.Template(
   <body>
     <canvas id="gl"></canvas>
   </body>
-    <script src="https://niivue.github.io/niivue/features/niivue.umd.js"></script>
-    <script type="module" async>
-      var nv = new niivue.Niivue();
-      nv.attachTo('gl');
-      let layers = [
-        {
-            name: "bg_map.gii",
-            useNegativeCmap: true,
-            opacity: 0.7,
-            colorMap: "gray",
-            base64: "$bg_map",
-        },
-        {
-            name: "surface_map.gii",
-            useNegativeCmap: true,
-            opacity: 0.7,
-            cal_min: $threshold,
-            base64: "$surf_map",
-        },
-      ];
-      let m = await niivue.NVMesh.loadFromBase64({
-        gl: nv.gl,
-        name: "pial_left.gii",
-        layers: layers,
-        base64:"$surf_mesh"
-      });
-      nv.addMesh(m);
-    </script>
+  <script src="https://niivue.github.io/niivue/features/niivue.umd.js"></script>
+  <script type="module" async>
+    var nv = new niivue.Niivue();
+    nv.attachTo('gl');
+    let layers = [
+      {
+          name: "bg_map.gii",
+          useNegativeCmap: true,
+          opacity: 0.7,
+          colorMap: "gray",
+          base64: "$bg_map",
+      },
+      {
+          name: "surface_map.gii",
+          useNegativeCmap: true,
+          opacity: 0.7,
+          cal_min: $threshold,
+          base64: "$surf_map",
+      },
+    ];
+    let m = await niivue.NVMesh.loadFromBase64({
+      gl: nv.gl,
+      name: "pial_left.gii",
+      layers: layers,
+      base64:"$surf_mesh"
+    });
+    nv.addMesh(m);
+  </script>
 </html>
 """
 )
@@ -131,3 +131,5 @@ display = html_document.HTMLDocument(template.safe_substitute(encoded))
 
 # save for later:
 display.save_as_html("/home/alexis/singbrain/data/tmp/niivue_plot.html")
+
+# %%
