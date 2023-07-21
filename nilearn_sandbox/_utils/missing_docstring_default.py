@@ -121,6 +121,6 @@ if __name__ == "__main__":
                         f"{relative_filename}::{func.name} - **line {func.lineno}**" + "\n"
                     )
                     fout.write("<br>Potential arguments to fix\n")
-                    for _, v in missing:
-                        fout.write(f"- [ ] `Default={v}`\n")
+                    for k, v in missing:
+                        fout.write(f"- [ ] `{k}` `Default={v}`\n")
                     fout.write("\n")
