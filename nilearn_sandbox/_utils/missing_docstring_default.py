@@ -78,6 +78,10 @@ if __name__ == "__main__":
         for filename in filenames:
             tree = parse_ast(filename)
             create_module_header = True
+            if input_path.is_dir():
+                relative_filename = filename.relative_to(input_path.parent)
+            else:
+                relative_filename = filename
 
             for func in top_level_functions(tree.body):
                 if PUBLIC_ONLY and func.name.startswith("_"):
@@ -87,9 +91,9 @@ if __name__ == "__main__":
                 if not docstring:
                     if create_module_header:
                         create_module_header = False
-                        fout.write(f"# {filename}\n")
+                        fout.write(f"# {relative_filename}\n")
                     fout.write(
-                        f"{filename}::{func.name} - **line: {func.lineno}**" + "\n"
+                        f"{relative_filename}::{func.name} - **line: {func.lineno}**" + "\n"
                     )
                     fout.write("- [ ] No docstring detected.\n\n")
                     continue
@@ -112,9 +116,9 @@ if __name__ == "__main__":
                 if missing:
                     if create_module_header:
                         create_module_header = False
-                        fout.write(f"# {filename}\n")
+                        fout.write(f"# {relative_filename}\n")
                     fout.write(
-                        f"{filename}::{func.name} - **line {func.lineno}**" + "\n"
+                        f"{relative_filename}::{func.name} - **line {func.lineno}**" + "\n"
                     )
                     fout.write("<br>Potential arguments to fix\n")
                     for _, v in missing:
