@@ -1,3 +1,10 @@
+"""
+Script to generate fsaverage gifti files for fsaverage resolutions 3 to 7.
+
+Freesurfer needs to be installed to run this script,
+and the env variable FREESURFER_HOME set to a valid value.
+"""
+
 # %%
 import argparse
 import os
@@ -15,6 +22,7 @@ from tqdm import tqdm
 
 
 def mesh_to_graph(coordinates, triangles):
+    """Compute adjacency matrix of a given mesh."""
     n_points = coordinates.shape[0]
     edges = np.hstack(
         (
@@ -41,13 +49,15 @@ def mesh_to_graph(coordinates, triangles):
     return connectivity
 
 
-# Compute adjacency matrices of order d a_d and af_d of fs7 and fs7 flat respectively
+# Compute adjacency matrices of order d a_d and af_d of fs7 and fs7 flat resp.
 def get_shortest_path_matrix(connectivity, d_max=10):
-    ## Compute powers of the connectivity matrix.
-    ## If A is the adjacency matrix, A^n_{i,j} denotes
-    ## the number of paths of size n from vertex i to vertex j.
-    ## Here we use B = A.astype("bool") such that B^n_{i,j} is True
-    ## if and only if there exists a path of size n from vertex i to vertex j.
+    """Compute powers of the connectivity matrix.
+
+    If A is the adjacency matrix, A^n_{i,j} denotes
+    the number of paths of size n from vertex i to vertex j.
+    Here we use B = A.astype("bool") such that B^n_{i,j} is True
+    if and only if there exists a path of size n from vertex i to vertex j.
+    """
     connectivity_boolean = connectivity.astype("bool")
 
     power_acc = connectivity_boolean.copy()
@@ -74,6 +84,7 @@ def get_shortest_path_matrix(connectivity, d_max=10):
 
 # Faces to keep
 def should_keep_face(face, diff):
+    """Determine if a mesh face should be filtered out."""
     if diff[face[0], face[1]] > 0:
         return False
     elif diff[face[0], face[2]] > 0:
@@ -101,7 +112,10 @@ if __name__ == "__main__":
     parser.add_argument(
         "flat_surfaces_dir",
         type=str,
-        help="Path to folder containing flat surfaces for fsaverage7 named flat_{left,right}.gii",
+        help=(
+            "Path to folder containing flat surfaces for fsaverage7 named"
+            " flat_{left,right}.gii"
+        ),
     )
 
     args = parser.parse_args()
@@ -185,9 +199,11 @@ if __name__ == "__main__":
                         "mris_convert",
                         "-c",
                         input_file,
-                        left_reference_surface
-                        if "lh" in filename
-                        else right_reference_surface,
+                        (
+                            left_reference_surface
+                            if "lh" in filename
+                            else right_reference_surface
+                        ),
                         output_gii_file,
                     ],
                     stdout=subprocess.PIPE,
@@ -236,7 +252,9 @@ if __name__ == "__main__":
                     np.argwhere(
                         [
                             np.allclose(
-                                vertex, high_res_fsaverage[0][i, :], atol=2 * 1e-2
+                                vertex,
+                                high_res_fsaverage[0][i, :],
+                                atol=2 * 1e-2,
                             )
                             for vertex in curr_res_fsaverage[0]
                         ]
@@ -249,7 +267,16 @@ if __name__ == "__main__":
                 ]
 
                 # Check that only one matching vertex was found per vertex
-                assert np.sum(np.array(list(map(lambda x: x.shape[0], curr_res_fsaverage_matches_in_high_res_fsaverage)))) == len(curr_res_fsaverage_matches_in_high_res_fsaverage)
+                assert np.sum(
+                    np.array(
+                        list(
+                            map(
+                                lambda x: x.shape[0],
+                                curr_res_fsaverage_matches_in_high_res_fsaverage,
+                            )
+                        )
+                    )
+                ) == len(curr_res_fsaverage_matches_in_high_res_fsaverage)
 
                 new_order = np.array(
                     curr_res_fsaverage_matches_in_high_res_fsaverage
@@ -322,9 +349,9 @@ if __name__ == "__main__":
                     )
 
                     # Revert order of vertices in current fsaverage mesh
-                    faces_rereordered = np.vectorize(
-                        lambda x: new_order[x]
-                    )(curr_res_fsaverage[1]).astype(np.int32)
+                    faces_rereordered = np.vectorize(lambda x: new_order[x])(
+                        curr_res_fsaverage[1]
+                    ).astype(np.int32)
                     curr_res_fsaverage = (
                         curr_res_fsaverage[0][new_order_inverted],
                         faces_rereordered,
