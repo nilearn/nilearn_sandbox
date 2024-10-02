@@ -5,12 +5,11 @@ The script support either a folder or file path as argument and write the result
 """
 
 import ast
-from pathlib import Path
 import re
 import sys
+from pathlib import Path
 
 from numpydoc.docscrape import NumpyDocString
-
 
 PUBLIC_ONLY = True
 
@@ -76,6 +75,12 @@ if __name__ == "__main__":
     log_file.touch()
     with log_file.open("w") as fout:
         for filename in filenames:
+
+            if str(filename.stem).startswith("test") or str(
+                filename.parent.stem
+            ).startswith("tests"):
+                continue
+
             tree = parse_ast(filename)
             create_module_header = True
             if input_path.is_dir():
@@ -93,7 +98,8 @@ if __name__ == "__main__":
                         create_module_header = False
                         fout.write(f"# {relative_filename}\n")
                     fout.write(
-                        f"{relative_filename}::{func.name} - **line: {func.lineno}**" + "\n"
+                        f"{relative_filename}::{func.name} - **line: {func.lineno}**"
+                        + "\n"
                     )
                     fout.write("- [ ] No docstring detected.\n\n")
                     continue
@@ -118,7 +124,8 @@ if __name__ == "__main__":
                         create_module_header = False
                         fout.write(f"# {relative_filename}\n")
                     fout.write(
-                        f"{relative_filename}::{func.name} - **line {func.lineno}**" + "\n"
+                        f"{relative_filename}::{func.name} - **line {func.lineno}**"
+                        + "\n"
                     )
                     fout.write("<br>Potential arguments to fix\n")
                     for k, v in missing:
