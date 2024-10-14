@@ -12,6 +12,7 @@ from pathlib import Path
 from numpydoc.docscrape import NumpyDocString
 
 PUBLIC_ONLY = True
+SKIP_TESTS = True
 
 
 def top_level_functions(body):
@@ -53,17 +54,32 @@ def get_missing(docstring, default_args):
                 r"(default|Default)(\s|:\s|=)(\'|\")?"
                 + re.escape(str(argvalue))
                 + r"(\'|\")?",
-                "".join(params[argname].desc),
+                "".join(params[argname].type),
             )
             if not m:
                 missing.append((argname, argvalue))
-
+            
     return missing
+
+def get_default_args(func):
+    # args with default value
+    default_args = {
+        k.arg: ast.unparse(v)
+        for k, v in zip(func.args.args[::-1], func.args.defaults[::-1])
+    }
+    # kwargs with default value
+    default_args |= {
+        k.arg: ast.unparse(v)
+        for k, v in zip(
+            func.args.kwonlyargs[::-1], func.args.kw_defaults[::-1]
+        )
+    }    
+    return default_args
 
 
 if __name__ == "__main__":
     input_path = Path(sys.argv[1])
-
+    
     if input_path.is_dir():
         filenames = input_path.rglob("*.py")
     elif input_path.is_file():
@@ -72,13 +88,18 @@ if __name__ == "__main__":
         raise ValueError("Expected a directory or file as argument.")
 
     log_file = Path("missing_docstring_default.md")
-    log_file.touch()
+    # log_file.touch()
     with log_file.open("w") as fout:
         for filename in filenames:
 
-            if str(filename.stem).startswith("test") or str(
+            if SKIP_TESTS and (str(filename.stem).startswith("test") or str(
                 filename.parent.stem
-            ).startswith("tests"):
+            ).startswith("tests")):
+                continue
+
+            if PUBLIC_ONLY and (str(filename.stem).startswith("_") or any(
+                str(x).startswith("_") for x in filename.parents
+            )):
                 continue
 
             tree = parse_ast(filename)
@@ -96,7 +117,7 @@ if __name__ == "__main__":
                 if not docstring:
                     if create_module_header:
                         create_module_header = False
-                        fout.write(f"# {relative_filename}\n")
+                        fout.write(f"## {relative_filename}\n")
                     fout.write(
                         f"{relative_filename}::{func.name} - **line: {func.lineno}**"
                         + "\n"
@@ -104,30 +125,41 @@ if __name__ == "__main__":
                     fout.write("- [ ] No docstring detected.\n\n")
                     continue
 
-                # args with default value
-                default_args = {
-                    k.arg: ast.unparse(v)
-                    for k, v in zip(func.args.args[::-1], func.args.defaults[::-1])
-                }
-                # kwargs with default value
-                default_args |= {
-                    k.arg: ast.unparse(v)
-                    for k, v in zip(
-                        func.args.kwonlyargs[::-1], func.args.kw_defaults[::-1]
-                    )
-                }
+                default_args = get_default_args(func)
 
                 missing = get_missing(docstring, default_args)
                 # Log arguments with missing default values in documentation.
                 if missing:
                     if create_module_header:
                         create_module_header = False
-                        fout.write(f"# {relative_filename}\n")
+                        fout.write(f"## {relative_filename}\n")
                     fout.write(
-                        f"{relative_filename}::{func.name} - **line {func.lineno}**"
+                        f"{relative_filename}::{func.name} - **line: {func.lineno}**"
                         + "\n"
                     )
                     fout.write("<br>Potential arguments to fix\n")
                     for k, v in missing:
                         fout.write(f"- [ ] `{k}` `Default={v}`\n")
                     fout.write("\n")
+
+## TESTS
+
+def function_without_missing(allow_empty=False):
+    """foo.
+
+    Parameters
+    ----------
+    allow_empty : :obj:`bool`, default=False
+        Allow loading an empty mask (full of 0 values).
+    """
+
+def test_get_missing():
+    tree = parse_ast(Path(__file__))
+    for func in top_level_functions(tree.body):
+        if func.name != "function_without_missing":
+            continue
+        docstring = ast.get_docstring(func, clean=False)
+        default_args = get_default_args(func)
+        missing = get_missing(docstring, default_args)
+        assert len(missing) == 0
+

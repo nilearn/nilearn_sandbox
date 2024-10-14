@@ -3,7 +3,8 @@ Utilities to check type, value or format of common parameters used everywhere
 in the codebase.
 
 """
-#Author: Virgile Fritsch, Jun. 2014, <virgile.fritsch@inria.fr>
+
+# Author: Virgile Fritsch, Jun. 2014, <virgile.fritsch@inria.fr>
 import sklearn.externals.joblib as joblib
 
 
@@ -25,10 +26,12 @@ def check_n_jobs(n_jobs):
 
     """
     if n_jobs == 0:  # invalid according to joblib's conventions
-        raise ValueError("'n_jobs == 0' is not a valid choice. "
-                         "Please provide a positive number of CPUs, or -1 "
-                         "for all CPUs, or a negative number (-i) for "
-                         "'all but (i-1)' CPUs (joblib conventions).")
+        raise ValueError(
+            "'n_jobs == 0' is not a valid choice. "
+            "Please provide a positive number of CPUs, or -1 "
+            "for all CPUs, or a negative number (-i) for "
+            "'all but (i-1)' CPUs (joblib conventions)."
+        )
     elif n_jobs < 0:
         n_jobs = max(1, joblib.cpu_count() + n_jobs + 1)
     else:
