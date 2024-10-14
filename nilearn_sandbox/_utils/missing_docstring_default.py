@@ -18,6 +18,7 @@ REPO_URL = "https://github.com/nilearn/nilearn/blob/main/"
 
 # "masking.py#L25
 
+
 def top_level_functions(body):
     return (f for f in body if isinstance(f, ast.FunctionDef))
 
@@ -61,8 +62,9 @@ def get_missing(docstring, default_args):
             )
             if not m:
                 missing.append((argname, argvalue))
-            
+
     return missing
+
 
 def get_default_args(func):
     # args with default value
@@ -73,22 +75,23 @@ def get_default_args(func):
     # kwargs with default value
     default_args |= {
         k.arg: ast.unparse(v)
-        for k, v in zip(
-            func.args.kwonlyargs[::-1], func.args.kw_defaults[::-1]
-        )
-    }    
+        for k, v in zip(func.args.kwonlyargs[::-1], func.args.kw_defaults[::-1])
+    }
     return default_args
+
 
 def construct_header(relative_filename):
     return f"## [{relative_filename}]({REPO_URL}{relative_filename})\n"
+
 
 def construct_function_line(relative_filename, func):
     function_url = f"{REPO_URL}{relative_filename}#L{func.lineno}"
     return f"[{relative_filename}::{func.name} - **line: {func.lineno}**]({function_url})\n"
 
+
 if __name__ == "__main__":
     input_path = Path(sys.argv[1])
-    
+
     if input_path.is_dir():
         filenames = input_path.rglob("*.py")
     elif input_path.is_file():
@@ -101,19 +104,19 @@ if __name__ == "__main__":
     with log_file.open("w") as fout:
         for filename in filenames:
 
-            if any(
-                str(x) == "externals"  for x in filename.parents
+            if any(x.stem == "externals" for x in filename.parents):
+                continue
+
+            if SKIP_TESTS and (
+                filename.stem.startswith("test")
+                or filename.parent.stem.startswith("tests")
             ):
                 continue
 
-            if SKIP_TESTS and (str(filename.stem).startswith("test") or str(
-                filename.parent.stem
-            ).startswith("tests")):
-                continue
-
-            if PUBLIC_ONLY and (str(filename.stem).startswith("_") or any(
-                str(x).startswith("_") for x in filename.parents
-            )):
+            if PUBLIC_ONLY and (
+                filename.stem.startswith("_")
+                or any(x.stem.startswith("_") for x in filename.parents)
+            ):
                 continue
 
             tree = parse_ast(filename)
@@ -152,6 +155,7 @@ if __name__ == "__main__":
 
 ## TESTS
 
+
 def function_without_missing(allow_empty=False):
     """foo.
 
@@ -160,6 +164,7 @@ def function_without_missing(allow_empty=False):
     allow_empty : :obj:`bool`, default=False
         Allow loading an empty mask (full of 0 values).
     """
+
 
 def test_get_missing():
     tree = parse_ast(Path(__file__))
@@ -170,4 +175,3 @@ def test_get_missing():
         default_args = get_default_args(func)
         missing = get_missing(docstring, default_args)
         assert len(missing) == 0
-
