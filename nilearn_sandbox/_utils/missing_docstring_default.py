@@ -14,6 +14,9 @@ from numpydoc.docscrape import NumpyDocString
 PUBLIC_ONLY = True
 SKIP_TESTS = True
 
+REPO_URL = "https://github.com/nilearn/nilearn/blob/main/"
+
+# "masking.py#L25
 
 def top_level_functions(body):
     return (f for f in body if isinstance(f, ast.FunctionDef))
@@ -76,6 +79,12 @@ def get_default_args(func):
     }    
     return default_args
 
+def construct_header(relative_filename):
+    return f"## [{relative_filename}]({REPO_URL}{relative_filename})\n"
+
+def construct_function_line(relative_filename, func):
+    function_url = f"{REPO_URL}{relative_filename}#L{func.lineno}"
+    return f"[{relative_filename}::{func.name} - **line: {func.lineno}**]({function_url})\n"
 
 if __name__ == "__main__":
     input_path = Path(sys.argv[1])
@@ -91,6 +100,11 @@ if __name__ == "__main__":
     # log_file.touch()
     with log_file.open("w") as fout:
         for filename in filenames:
+
+            if any(
+                str(x) == "externals"  for x in filename.parents
+            ):
+                continue
 
             if SKIP_TESTS and (str(filename.stem).startswith("test") or str(
                 filename.parent.stem
@@ -117,11 +131,8 @@ if __name__ == "__main__":
                 if not docstring:
                     if create_module_header:
                         create_module_header = False
-                        fout.write(f"## {relative_filename}\n")
-                    fout.write(
-                        f"{relative_filename}::{func.name} - **line: {func.lineno}**"
-                        + "\n"
-                    )
+                        fout.write(construct_header(relative_filename))
+                    fout.write(construct_function_line(relative_filename, func))
                     fout.write("- [ ] No docstring detected.\n\n")
                     continue
 
@@ -132,11 +143,8 @@ if __name__ == "__main__":
                 if missing:
                     if create_module_header:
                         create_module_header = False
-                        fout.write(f"## {relative_filename}\n")
-                    fout.write(
-                        f"{relative_filename}::{func.name} - **line: {func.lineno}**"
-                        + "\n"
-                    )
+                        fout.write(construct_header(relative_filename))
+                    fout.write(construct_function_line(relative_filename, func))
                     fout.write("<br>Potential arguments to fix\n")
                     for k, v in missing:
                         fout.write(f"- [ ] `{k}` `Default={v}`\n")
